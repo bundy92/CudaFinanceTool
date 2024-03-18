@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="option_pricing.cuh" />
+    <ClInclude Include="utils.cuh" />
+    <ClInclude Include="monte_carlo.cuh" />
+    <ClInclude Include="risk_analysis.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="main.cu" />
+    <CudaCompile Include="monte_carlo.cu" />
+    <CudaCompile Include="option_pricing.cu" />
+    <CudaCompile Include="risk_analysis.cu" />
+    <CudaCompile Include="utils.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+    <None Include="cuda_interface.py" />
+  </ItemGroup>
+</Project>

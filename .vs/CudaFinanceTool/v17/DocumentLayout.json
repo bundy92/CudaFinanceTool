@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\User\\Downloads\\CPP\\CudaTest\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{24AA5FAE-A13A-4297-927E-C6762CE8B8B2}|CudaTest.vcxproj|C:\\Users\\User\\Downloads\\CPP\\CudaTest\\main.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{24AA5FAE-A13A-4297-927E-C6762CE8B8B2}|CudaTest.vcxproj|solutionrelative:main.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "main.cu",
+              "DocumentMoniker": "C:\\Users\\User\\Downloads\\CPP\\CudaTest\\main.cu",
+              "RelativeDocumentMoniker": "main.cu",
+              "ToolTip": "C:\\Users\\User\\Downloads\\CPP\\CudaTest\\main.cu",
+              "RelativeToolTip": "main.cu",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAGgAAABwAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2024-03-15T16:58:02.426Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

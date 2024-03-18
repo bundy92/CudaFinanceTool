@@ -1,0 +1,25 @@
+﻿  cudaTest.cpp
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(4,12): error C2144: syntax error: 'void' should be preceded by ';'
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(4,17): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(5,17): error C2065: 'threadIdx': undeclared identifier
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(5,31): error C2065: 'blockIdx': undeclared identifier
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(5,44): error C2065: 'blockDim': undeclared identifier
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(17,15): error C3861: 'malloc': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(18,15): error C3861: 'malloc': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(19,15): error C3861: 'malloc': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(28,5): error C3861: 'cudaMalloc': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(29,5): error C3861: 'cudaMalloc': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(30,5): error C3861: 'cudaMalloc': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(33,41): error C2065: 'cudaMemcpyHostToDevice': undeclared identifier
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(33,5): error C3861: 'cudaMemcpy': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(34,41): error C2065: 'cudaMemcpyHostToDevice': undeclared identifier
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(34,5): error C3861: 'cudaMemcpy': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(41,18): error C2059: syntax error: '<'
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(44,41): error C2065: 'cudaMemcpyDeviceToHost': undeclared identifier
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(44,5): error C3861: 'cudaMemcpy': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(52,5): error C3861: 'cudaFree': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(53,5): error C3861: 'cudaFree': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(54,5): error C3861: 'cudaFree': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(57,5): error C3861: 'free': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(58,5): error C3861: 'free': identifier not found
+C:\Users\User\Downloads\CPP\cudaTest\cudaTest.cpp(59,5): error C3861: 'free': identifier not found
