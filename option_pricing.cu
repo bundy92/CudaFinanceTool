@@ -2,14 +2,14 @@
 #define OPTION_PRICING_CU
 
 #ifndef M_SQRT1_2
-#define M_SQRT1_2 0.70710678118
+#define M_SQRT1_2 0.70710678118f
 #endif
 
 #include "option_pricing.cuh"
 
 // Function to calculate cumulative normal distribution
-__device__ double cumulative_normal_distribution(double x) {
-    return 0.5 * erfc(-x * M_SQRT1_2);
+__device__ float cumulative_normal_distribution(float x) {
+    return 0.5f * erfcf(-x * M_SQRT1_2);
 }
 
 // Black-Scholes option pricing kernel implementation with vectorization
@@ -47,65 +47,91 @@ __device__ double cumulative_normal_distribution(double x) {
  * The vectorization technique allows for efficient parallel computation of option prices, deltas, and gammas, improving performance on GPU architectures.
  * This kernel is designed to handle cases where the number of options is not necessarily a multiple of the block size, ensuring all options are processed correctly.
  */
-__global__ void black_scholes_option_pricing(double* option_prices, double* deltas, double* gammas,
-    const double* stock_prices_x, const double* stock_prices_y,
-    const double* strike_prices_x, const double* strike_prices_y,
-    const double* volatilities_x, const double* volatilities_y,
-    const double* time_to_maturity_x, const double* time_to_maturity_y,
-    const double* risk_free_rates_x, const double* risk_free_rates_y,
+
+// Black-Scholes option pricing kernel implementation with vectorization
+__global__ void black_scholes_option_pricing(float* option_prices, float* deltas, float* gammas,
+    const float* stock_prices_x, const float* stock_prices_y,
+    const float* strike_prices_x, const float* strike_prices_y,
+    const float* volatilities_x, const float* volatilities_y,
+    const float* time_to_maturity_x, const float* time_to_maturity_y,
+    const float* risk_free_rates_x, const float* risk_free_rates_y,
     const int num_options) {
+
+    extern __shared__ float shared_data[]; // Shared memory for caching
+
     int tid = threadIdx.x + blockIdx.x * blockDim.x * 2;
+
+    // Indices for accessing shared memory
+    int local_index = threadIdx.x;
+    int global_index = tid;
+
+    // Load data into shared memory
+    if (global_index < num_options) {
+        shared_data[local_index] = stock_prices_x[global_index];
+        shared_data[local_index + blockDim.x] = stock_prices_y[global_index];
+        shared_data[local_index + 2 * blockDim.x] = strike_prices_x[global_index];
+        shared_data[local_index + 3 * blockDim.x] = strike_prices_y[global_index];
+        shared_data[local_index + 4 * blockDim.x] = volatilities_x[global_index];
+        shared_data[local_index + 5 * blockDim.x] = volatilities_y[global_index];
+        shared_data[local_index + 6 * blockDim.x] = time_to_maturity_x[global_index];
+        shared_data[local_index + 7 * blockDim.x] = time_to_maturity_y[global_index];
+        shared_data[local_index + 8 * blockDim.x] = risk_free_rates_x[global_index];
+        shared_data[local_index + 9 * blockDim.x] = risk_free_rates_y[global_index];
+    }
+
+    __syncthreads(); // Ensure all threads have loaded data into shared memory
+
     if (tid < num_options) {
-        // Load data for the first element of the vector
-        double S_x = stock_prices_x[tid];
-        double S_y = stock_prices_y[tid];
-        double K_x = strike_prices_x[tid];
-        double K_y = strike_prices_y[tid];
-        double sigma_x = volatilities_x[tid];
-        double sigma_y = volatilities_y[tid];
-        double T_x = time_to_maturity_x[tid];
-        double T_y = time_to_maturity_y[tid];
-        double r_x = risk_free_rates_x[tid];
-        double r_y = risk_free_rates_y[tid];
+        // Load data from shared memory
+        float S_x = shared_data[local_index];
+        float S_y = shared_data[local_index + blockDim.x];
+        float K_x = shared_data[local_index + 2 * blockDim.x];
+        float K_y = shared_data[local_index + 3 * blockDim.x];
+        float sigma_x = shared_data[local_index + 4 * blockDim.x];
+        float sigma_y = shared_data[local_index + 5 * blockDim.x];
+        float T_x = shared_data[local_index + 6 * blockDim.x];
+        float T_y = shared_data[local_index + 7 * blockDim.x];
+        float r_x = shared_data[local_index + 8 * blockDim.x];
+        float r_y = shared_data[local_index + 9 * blockDim.x];
 
-        // Calculate coefficients for the first element
-        double sqrt_T_x = sqrt(T_x);
-        double d1_x = (log(S_x / K_x) + (r_x + 0.5 * sigma_x * sigma_x) * T_x) / (sigma_x * sqrt_T_x);
-        double d2_x = d1_x - sigma_x * sqrt_T_x;
+        // Calculate coefficients
+        float sqrt_T_x = sqrtf(T_x);
+        float d1_x = (logf(S_x / K_x) + (r_x + 0.5f * sigma_x * sigma_x) * T_x) / (sigma_x * sqrt_T_x);
+        float d2_x = d1_x - sigma_x * sqrt_T_x;
 
-        // Compute option price, delta, and gamma for the first element
-        double Nd1_x = cumulative_normal_distribution(d1_x);
-        double Nd2_x = cumulative_normal_distribution(d2_x);
-        double exp_minus_r_T_x = exp(-r_x * T_x);
-        double sqrt_T_S_sigma_x = S_x * sigma_x * sqrt_T_x;
+        // Compute option price, delta, and gamma
+        float Nd1_x = cumulative_normal_distribution(d1_x);
+        float Nd2_x = cumulative_normal_distribution(d2_x);
+        float exp_minus_r_T_x = expf(-r_x * T_x);
+        float sqrt_T_S_sigma_x = S_x * sigma_x * sqrt_T_x;
         option_prices[tid] = S_x * Nd1_x - K_x * exp_minus_r_T_x * Nd2_x;
         deltas[tid] = Nd1_x;
         gammas[tid] = exp_minus_r_T_x / sqrt_T_S_sigma_x * Nd1_x;
 
-        // Check if there's a second element to process
+        // Process the second element if within range
         if (tid + blockDim.x < num_options) {
-            // Load data for the second element of the vector
-            double S_x_next = stock_prices_x[tid + blockDim.x];
-            double S_y_next = stock_prices_y[tid + blockDim.x];
-            double K_x_next = strike_prices_x[tid + blockDim.x];
-            double K_y_next = strike_prices_y[tid + blockDim.x];
-            double sigma_x_next = volatilities_x[tid + blockDim.x];
-            double sigma_y_next = volatilities_y[tid + blockDim.x];
-            double T_x_next = time_to_maturity_x[tid + blockDim.x];
-            double T_y_next = time_to_maturity_y[tid + blockDim.x];
-            double r_x_next = risk_free_rates_x[tid + blockDim.x];
-            double r_y_next = risk_free_rates_y[tid + blockDim.x];
+            // Load data for the second element
+            float S_x_next = shared_data[local_index + blockDim.x];
+            float S_y_next = shared_data[local_index + blockDim.x + blockDim.x];
+            float K_x_next = shared_data[local_index + 2 * blockDim.x + blockDim.x];
+            float K_y_next = shared_data[local_index + 3 * blockDim.x + blockDim.x];
+            float sigma_x_next = shared_data[local_index + 4 * blockDim.x + blockDim.x];
+            float sigma_y_next = shared_data[local_index + 5 * blockDim.x + blockDim.x];
+            float T_x_next = shared_data[local_index + 6 * blockDim.x + blockDim.x];
+            float T_y_next = shared_data[local_index + 7 * blockDim.x + blockDim.x];
+            float r_x_next = shared_data[local_index + 8 * blockDim.x + blockDim.x];
+            float r_y_next = shared_data[local_index + 9 * blockDim.x + blockDim.x];
 
             // Calculate coefficients for the second element
-            double sqrt_T_x_next = sqrt(T_x_next);
-            double d1_x_next = (log(S_x_next / K_x_next) + (r_x_next + 0.5 * sigma_x_next * sigma_x_next) * T_x_next) / (sigma_x_next * sqrt_T_x_next);
-            double d2_x_next = d1_x_next - sigma_x_next * sqrt_T_x_next;
+            float sqrt_T_x_next = sqrtf(T_x_next);
+            float d1_x_next = (logf(S_x_next / K_x_next) + (r_x_next + 0.5f * sigma_x_next * sigma_x_next) * T_x_next) / (sigma_x_next * sqrt_T_x_next);
+            float d2_x_next = d1_x_next - sigma_x_next * sqrt_T_x_next;
 
             // Compute option price, delta, and gamma for the second element
-            double Nd1_x_next = cumulative_normal_distribution(d1_x_next);
-            double Nd2_x_next = cumulative_normal_distribution(d2_x_next);
-            double exp_minus_r_T_x_next = exp(-r_x_next * T_x_next);
-            double sqrt_T_S_sigma_x_next = S_x_next * sigma_x_next * sqrt_T_x_next;
+            float Nd1_x_next = cumulative_normal_distribution(d1_x_next);
+            float Nd2_x_next = cumulative_normal_distribution(d2_x_next);
+            float exp_minus_r_T_x_next = expf(-r_x_next * T_x_next);
+            float sqrt_T_S_sigma_x_next = S_x_next * sigma_x_next * sqrt_T_x_next;
             option_prices[tid + blockDim.x] = S_x_next * Nd1_x_next - K_x_next * exp_minus_r_T_x_next * Nd2_x_next;
             deltas[tid + blockDim.x] = Nd1_x_next;
             gammas[tid + blockDim.x] = exp_minus_r_T_x_next / sqrt_T_S_sigma_x_next * Nd1_x_next;

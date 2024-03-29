@@ -29,9 +29,10 @@
  * Once all option prices are loaded, parallel reduction is used to find the maximum option price.
  * The VaR value is then computed based on the sorted option prices.
  */
-__global__ void calculate_var(double* option_prices, double* var_values, const int num_options,
-    const double confidence_level) {
-    extern __shared__ double shared_buffer[];
+// VaR calculation kernel implementation
+__global__ void calculate_var(float* option_prices, float* var_values, const int num_options,
+    const float confidence_level) {
+    extern __shared__ float shared_buffer[];
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     int idx = threadIdx.x;
@@ -40,7 +41,7 @@ __global__ void calculate_var(double* option_prices, double* var_values, const i
         shared_buffer[idx] = option_prices[tid];
     }
     else {
-        shared_buffer[idx] = 0.0;
+        shared_buffer[idx] = 0.0f;
     }
 
     __syncthreads();
@@ -49,15 +50,15 @@ __global__ void calculate_var(double* option_prices, double* var_values, const i
         // Sort the option prices using parallel reduction
         for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
             if (idx < stride) {
-                double temp = shared_buffer[idx];
-                double other = shared_buffer[idx + stride];
-                shared_buffer[idx] = (temp > other) ? temp : other;
+                float temp = shared_buffer[idx];
+                float other = shared_buffer[idx + stride];
+                shared_buffer[idx] = fmaxf(temp, other);
             }
             __syncthreads();
         }
 
         // Compute VaR value
-        int var_index = (int)ceil(num_options * (1.0 - confidence_level));
+        int var_index = (int)ceilf(num_options * (1.0f - confidence_level));
         var_values[blockIdx.x] = shared_buffer[var_index];
     }
 }
