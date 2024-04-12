@@ -32,34 +32,35 @@
  * For each option, it initializes a random number generator, simulates multiple paths of the stock price using the geometric Brownian motion model, calculates the option payoff for each path, and computes the average payoff over all paths.
  * The final option price is computed as the discounted average payoff over all simulations.
  */
-__global__ void monte_carlo_option_pricing(double* option_prices, const double* stock_prices,
-    const double* volatilities, const double* time_to_maturity,
-    const double* risk_free_rates, const double* strike_prices, const int num_options,
-    const double num_simulations) {
+
+// Monte Carlo simulation kernel implementation
+__global__ void monte_carlo_option_pricing(float* option_prices, const float* stock_prices,
+    const float* volatilities, const float* time_to_maturity,
+    const float* risk_free_rates, const float* strike_prices, const int num_options,
+    const int num_simulations) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if (tid < num_options) {
         curandState state;
         curand_init(tid, 0, 0, &state);
 
-        double S = stock_prices[tid];
-        double sigma = volatilities[tid];
-        double T = time_to_maturity[tid];
-        double r = risk_free_rates[tid];
-        double K = strike_prices[tid];
+        float S = stock_prices[tid];
+        float sigma = volatilities[tid];
+        float T = time_to_maturity[tid];
+        float r = risk_free_rates[tid];
+        float K = strike_prices[tid];
 
-
-        double dt = T / num_simulations;
-        double sum_payoffs = 0.0;
+        float dt = T / num_simulations;
+        float sum_payoffs = 0.0f;
 
         for (int i = 0; i < num_simulations; i++) {
-            double Z = curand_normal(&state);
-            S *= exp((r - 0.5 * sigma * sigma) * dt + sigma * sqrt(dt) * Z);
-            double payoff = fmax(S - K, 0.0);
+            float Z = curand_normal(&state);
+            S *= expf((r - 0.5f * sigma * sigma) * dt + sigma * sqrtf(dt) * Z);
+            float payoff = fmaxf(S - K, 0.0f);
             sum_payoffs += payoff;
         }
 
-        option_prices[tid] = exp(-r * T) * sum_payoffs / num_simulations;
+        option_prices[tid] = expf(-r * T) * sum_payoffs / num_simulations;
     }
 }
 
-#endif //MONTE_CARLO_CU
+#endif // MONTE_CARLO_CU

@@ -1,12 +1,7 @@
 #ifndef UTILS_CU
 #define UTILS_CU
 
-#ifndef M_SQRT1_2
-#define M_SQRT1_2 0.70710678118
-#endif
-
 #include "utils.cuh"
-
 
 // Utility function for error checking
 #define CUDA_CHECK_ERROR(err) \
@@ -23,7 +18,7 @@ __global__ void setup_rng(curandState* state, unsigned long seed) {
     curand_init(seed, tid, 0, &state[tid]);
 }
 
-__global__ void generate_random_numbers(curandState* state, double* random_numbers, int num_elements) {
+__global__ void generate_random_numbers(curandState* state, float* random_numbers, int num_elements) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if (tid < num_elements) {
         random_numbers[tid] = curand_uniform(&state[tid]);
@@ -33,8 +28,8 @@ __global__ void generate_random_numbers(curandState* state, double* random_numbe
 // Other utility functions for input/output, error handling, etc.
 
 // Function to calculate the mean of an array
-__host__ double mean_of_array(double* array, int size) {
-    double sum = 0.0;
+__host__ float mean_of_array(float* array, int size) {
+    float sum = 0.0f;
     for (int i = 0; i < size; ++i) {
         sum += array[i];
     }
