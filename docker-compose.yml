@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  cuda-finance-tool:
+    build: .
+    container_name: cuda-finance-tool
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Redis for caching and job queue
+  redis:
+    image: redis:7-alpine
+    container_name: cuda-finance-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    profiles:
+      - cache
+
+  # Optional: PostgreSQL for data persistence
+  postgres:
+    image: postgres:15-alpine
+    container_name: cuda-finance-db
+    environment:
+      POSTGRES_DB: cuda_finance
+      POSTGRES_USER: cuda_user
+      POSTGRES_PASSWORD: cuda_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    profiles:
+      - database
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: cuda-finance-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - cuda-finance-tool
+    restart: unless-stopped
+    profiles:
+      - proxy
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  default:
+    name: cuda-finance-network 

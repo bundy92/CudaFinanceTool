@@ -1,0 +1,62 @@
+# CUDA Finance Tool Python Dependencies
+# Core dependencies
+numpy>=1.21.0
+pycuda>=2022.1
+yfinance>=0.1.87
+
+# Web interface dependencies
+flask>=2.3.0
+flask-cors>=4.0.0
+gunicorn>=20.1.0
+
+# Data processing and analysis
+pandas>=1.5.0
+scipy>=1.9.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Testing dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-benchmark>=4.0.0
+
+# Development dependencies
+black>=22.0.0
+flake8>=5.0.0
+mypy>=0.991
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.0.0
+
+# Optional: Advanced features
+scikit-learn>=1.1.0
+tensorflow>=2.10.0
+torch>=1.12.0
+
+# Database support
+sqlalchemy>=1.4.0
+psycopg2-binary>=2.9.0
+alembic>=1.8.0
+
+# Logging and monitoring
+structlog>=22.0.0
+prometheus-client>=0.14.0
+
+# Machine Learning
+scikit-learn>=1.1.0
+joblib>=1.2.0
+
+# Real-time data and async
+aiohttp>=3.8.0
+websockets>=10.0
+redis>=4.0.0
+alpha-vantage>=2.3.0
+
+# Optional: Real-time data
+websocket-client>=1.4.0
+redis>=4.0.0
+
+# Optional: Monitoring and logging
+prometheus-client>=0.14.0
+structlog>=22.0.0 

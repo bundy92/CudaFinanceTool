@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUDA Finance Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .progress-custom {
+            height: 8px;
+            border-radius: 4px;
+        }
+        .result-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .api-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark gradient-bg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                CUDA Finance Tool
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-microchip me-1"></i>
+                    <span id="gpu-status">Checking GPU...</span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Quick Pricing Section -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card card-hover">
+                    <div class="card-header">
+                        <h5><i class="fas fa-calculator me-2"></i>Quick Option Pricing</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="quickPricingForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="stockPrice" class="form-label">Stock Price</label>
+                                        <input type="number" class="form-control" id="stockPrice" value="100" step="0.01" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="strikePrice" class="form-label">Strike Price</label>
+                                        <input type="number" class="form-control" id="strikePrice" value="100" step="0.01" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="volatility" class="form-label">Volatility</label>
+                                        <input type="number" class="form-control" id="volatility" value="0.2" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="timeToMaturity" class="form-label">Time to Maturity (years)</label>
+                                        <input type="number" class="form-control" id="timeToMaturity" value="1.0" step="0.01" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="riskFreeRate" class="form-label">Risk-Free Rate</label>
+                                        <input type="number" class="form-control" id="riskFreeRate" value="0.05" step="0.001" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="optionType" class="form-label">Option Type</label>
+                                        <select class="form-select" id="optionType">
+                                            <option value="0">European Call</option>
+                                            <option value="1">European Put</option>
+                                            <option value="2">American Call</option>
+                                            <option value="3">American Put</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-play me-2"></i>Calculate Price
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="card result-card mt-4" id="resultsCard" style="display: none;">
+                    <div class="card-body">
+                        <h5><i class="fas fa-chart-bar me-2"></i>Pricing Results</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>Option Price</h6>
+                                    <h4 id="optionPrice">-</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>Delta</h6>
+                                    <h4 id="delta">-</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>Gamma</h6>
+                                    <h4 id="gamma">-</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Analysis Section -->
+            <div class="col-lg-4">
+                <div class="card card-hover">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shield-alt me-2"></i>Risk Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="riskAnalysisForm">
+                            <div class="mb-3">
+                                <label for="portfolioValues" class="form-label">Portfolio Values (comma-separated)</label>
+                                <textarea class="form-control" id="portfolioValues" rows="3" placeholder="100, 105, 95, 110, 102"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confidenceLevel" class="form-label">Confidence Level</label>
+                                <input type="number" class="form-control" id="confidenceLevel" value="0.95" step="0.01" min="0.5" max="0.999">
+                            </div>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-calculator me-2"></i>Calculate VaR
+                            </button>
+                        </form>
+                        
+                        <div class="mt-3" id="riskResults" style="display: none;">
+                            <h6>Risk Metrics</h6>
+                            <div class="d-flex justify-content-between">
+                                <span>VaR:</span>
+                                <span id="varValue">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>CVaR:</span>
+                                <span id="cvarValue">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Management Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card card-hover">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tasks me-2"></i>Batch Job Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Create Batch Job</h6>
+                                <form id="batchJobForm">
+                                    <div class="mb-3">
+                                        <label for="numOptions" class="form-label">Number of Options</label>
+                                        <input type="number" class="form-control" id="numOptions" value="1000" min="1" max="100000">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="numSimulations" class="form-label">Monte Carlo Simulations</label>
+                                        <input type="number" class="form-control" id="numSimulations" value="10000" min="1000" max="1000000">
+                                    </div>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-plus me-2"></i>Create Job
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Active Jobs</h6>
+                                <div id="jobsList">
+                                    <p class="text-muted">No active jobs</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Documentation Section -->
+        <div class="api-section">
+            <h5><i class="fas fa-code me-2"></i>API Documentation</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Quick Pricing</h6>
+                    <pre><code>POST /api/pricing/quick
+{
+    "stock_price": 100,
+    "strike_price": 100,
+    "volatility": 0.2,
+    "time_to_maturity": 1.0,
+    "risk_free_rate": 0.05
+}</code></pre>
+                </div>
+                <div class="col-md-6">
+                    <h6>Risk Analysis</h6>
+                    <pre><code>POST /api/risk/var
+{
+    "portfolio_values": [100, 105, 95, 110],
+    "confidence_level": 0.95
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Processing...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let jobs = [];
+        let jobPollingInterval;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSystemStatus();
+            loadOptionTypes();
+            startJobPolling();
+        });
+
+        // Check system status
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('/api/system/status');
+                const data = await response.json();
+                
+                const gpuStatus = document.getElementById('gpu-status');
+                if (data.cuda_available) {
+                    gpuStatus.innerHTML = '<i class="fas fa-microchip me-1"></i>GPU Available';
+                    gpuStatus.className = 'navbar-text text-success';
+                } else {
+                    gpuStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>GPU Not Available';
+                    gpuStatus.className = 'navbar-text text-warning';
+                }
+            } catch (error) {
+                console.error('Error checking system status:', error);
+            }
+        }
+
+        // Load option types
+        async function loadOptionTypes() {
+            try {
+                const response = await fetch('/api/options/types');
+                const data = await response.json();
+                
+                const select = document.getElementById('optionType');
+                select.innerHTML = '';
+                
+                data.option_types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.textContent = type.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading option types:', error);
+            }
+        }
+
+        // Quick pricing form submission
+        document.getElementById('quickPricingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                stock_price: parseFloat(document.getElementById('stockPrice').value),
+                strike_price: parseFloat(document.getElementById('strikePrice').value),
+                volatility: parseFloat(document.getElementById('volatility').value),
+                time_to_maturity: parseFloat(document.getElementById('timeToMaturity').value),
+                risk_free_rate: parseFloat(document.getElementById('riskFreeRate').value)
+            };
+
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/pricing/quick', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    displayResults(result);
+                }
+            } catch (error) {
+                hideLoading();
+                showError('Network error: ' + error.message);
+            }
+        });
+
+        // Risk analysis form submission
+        document.getElementById('riskAnalysisForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const portfolioValues = document.getElementById('portfolioValues').value
+                .split(',')
+                .map(v => parseFloat(v.trim()))
+                .filter(v => !isNaN(v));
+            
+            const formData = {
+                portfolio_values: portfolioValues,
+                confidence_level: parseFloat(document.getElementById('confidenceLevel').value)
+            };
+
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/risk/var', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    displayRiskResults(result);
+                }
+            } catch (error) {
+                hideLoading();
+                showError('Network error: ' + error.message);
+            }
+        });
+
+        // Batch job form submission
+        document.getElementById('batchJobForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                num_options: parseInt(document.getElementById('numOptions').value),
+                num_simulations: parseInt(document.getElementById('numSimulations').value),
+                stock_prices: Array(parseInt(document.getElementById('numOptions').value)).fill(100),
+                strike_prices: Array(parseInt(document.getElementById('numOptions').value)).fill(100),
+                volatilities: Array(parseInt(document.getElementById('numOptions').value)).fill(0.2),
+                time_to_maturity: Array(parseInt(document.getElementById('numOptions').value)).fill(1.0),
+                risk_free_rates: Array(parseInt(document.getElementById('numOptions').value)).fill(0.05)
+            };
+
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/pricing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    showSuccess('Job created successfully! Job ID: ' + result.job_id);
+                    updateJobsList();
+                }
+            } catch (error) {
+                hideLoading();
+                showError('Network error: ' + error.message);
+            }
+        });
+
+        // Display results
+        function displayResults(result) {
+            document.getElementById('optionPrice').textContent = result.option_price.toFixed(4);
+            document.getElementById('delta').textContent = result.delta.toFixed(4);
+            document.getElementById('gamma').textContent = result.gamma.toFixed(4);
+            document.getElementById('resultsCard').style.display = 'block';
+        }
+
+        // Display risk results
+        function displayRiskResults(result) {
+            document.getElementById('varValue').textContent = result.var.toFixed(4);
+            document.getElementById('cvarValue').textContent = result.cvar.toFixed(4);
+            document.getElementById('riskResults').style.display = 'block';
+        }
+
+        // Show/hide loading modal
+        function showLoading() {
+            const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            modal.show();
+        }
+
+        function hideLoading() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            alert('Error: ' + message);
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            alert('Success: ' + message);
+        }
+
+        // Update jobs list
+        async function updateJobsList() {
+            try {
+                const response = await fetch('/api/jobs');
+                const data = await response.json();
+                
+                const jobsList = document.getElementById('jobsList');
+                if (data.jobs.length === 0) {
+                    jobsList.innerHTML = '<p class="text-muted">No active jobs</p>';
+                } else {
+                    jobsList.innerHTML = data.jobs.map(job => `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>${job.job_id}</span>
+                            <span class="badge bg-${getStatusColor(job.status)} status-badge">
+                                ${job.status}
+                            </span>
+                        </div>
+                        ${job.status === 'running' ? `
+                        <div class="progress progress-custom mb-2">
+                            <div class="progress-bar" style="width: ${job.progress}%"></div>
+                        </div>
+                        ` : ''}
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error updating jobs list:', error);
+            }
+        }
+
+        // Get status color
+        function getStatusColor(status) {
+            switch (status) {
+                case 'pending': return 'warning';
+                case 'running': return 'primary';
+                case 'completed': return 'success';
+                case 'failed': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        // Start job polling
+        function startJobPolling() {
+            jobPollingInterval = setInterval(updateJobsList, 5000);
+        }
+    </script>
+</body>
+</html> 
