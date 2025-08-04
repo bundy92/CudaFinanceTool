@@ -5,6 +5,7 @@
 #include "monte_carlo.cuh"       // CUDA kernel for Monte Carlo simulation
 #include "risk_analysis.cuh"     // CUDA kernel for risk analysis
 #include "utils.cuh"             // Utility functions
+#include "error_handling.cuh"    // Error handling system
 
 // Main CUDA program for option pricing, Monte Carlo simulation, and risk analysis
 /*
@@ -48,6 +49,10 @@
 
  // Main function
 int main() {
+    // Initialize CUDA and error handling
+    CUDA_CHECK(cudaSetDevice(0));
+    print_device_info();
+    
     // Constants
     const int num_options = 8196;           // Number of options
     const int mem = 8196;                      // Memory allocation size
@@ -55,6 +60,9 @@ int main() {
     const int num_simulations = 100000;         // Number of Monte Carlo simulations
     const int block_size = 512;                // CUDA block size
     const int num_blocks = (num_options + block_size - 1) / block_size; // Number of CUDA blocks
+    
+    // Validate parameters
+    VALIDATE_CONFIDENCE_LEVEL(confidence_level);
 
     // Sample data for testing
     float sample_stock_prices_x[mem];    // Array to hold sample stock prices for x
@@ -82,108 +90,82 @@ int main() {
         sample_risk_free_rates_y[i] = 0.05;      // Constant risk-free rate for testing for y
     }
 
+    // Check device memory requirements
+    size_t total_memory_required = num_options * sizeof(float) * 10; // 10 arrays
+    check_device_memory(total_memory_required);
+    
     // Allocate device memory for input data
     float* d_stock_prices_x, * d_stock_prices_y, * d_strike_prices_x, * d_strike_prices_y,
         * d_volatilities_x, * d_volatilities_y, * d_time_to_maturity_x, * d_time_to_maturity_y,
         * d_risk_free_rates_x, * d_risk_free_rates_y;
 
-    cudaMalloc((void**)&d_stock_prices_x, num_options * sizeof(float));
-    cudaMalloc((void**)&d_stock_prices_y, num_options * sizeof(float));
-    cudaMalloc((void**)&d_strike_prices_x, num_options * sizeof(float));
-    cudaMalloc((void**)&d_strike_prices_y, num_options * sizeof(float));
-    cudaMalloc((void**)&d_volatilities_x, num_options * sizeof(float));
-    cudaMalloc((void**)&d_volatilities_y, num_options * sizeof(float));
-    cudaMalloc((void**)&d_time_to_maturity_x, num_options * sizeof(float));
-    cudaMalloc((void**)&d_time_to_maturity_y, num_options * sizeof(float));
-    cudaMalloc((void**)&d_risk_free_rates_x, num_options * sizeof(float));
-    cudaMalloc((void**)&d_risk_free_rates_y, num_options * sizeof(float));
+    CUDA_MALLOC(d_stock_prices_x, num_options * sizeof(float));
+    CUDA_MALLOC(d_stock_prices_y, num_options * sizeof(float));
+    CUDA_MALLOC(d_strike_prices_x, num_options * sizeof(float));
+    CUDA_MALLOC(d_strike_prices_y, num_options * sizeof(float));
+    CUDA_MALLOC(d_volatilities_x, num_options * sizeof(float));
+    CUDA_MALLOC(d_volatilities_y, num_options * sizeof(float));
+    CUDA_MALLOC(d_time_to_maturity_x, num_options * sizeof(float));
+    CUDA_MALLOC(d_time_to_maturity_y, num_options * sizeof(float));
+    CUDA_MALLOC(d_risk_free_rates_x, num_options * sizeof(float));
+    CUDA_MALLOC(d_risk_free_rates_y, num_options * sizeof(float));
 
     // Copy sample data from host to device
-    cudaMemcpy(d_stock_prices_x, sample_stock_prices_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_stock_prices_y, sample_stock_prices_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_strike_prices_x, sample_strike_prices_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_strike_prices_y, sample_strike_prices_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_volatilities_x, sample_volatilities_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_volatilities_y, sample_volatilities_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_time_to_maturity_x, sample_time_to_maturity_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_time_to_maturity_y, sample_time_to_maturity_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_risk_free_rates_x, sample_risk_free_rates_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_risk_free_rates_y, sample_risk_free_rates_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_stock_prices_x, sample_stock_prices_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_stock_prices_y, sample_stock_prices_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_strike_prices_x, sample_strike_prices_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_strike_prices_y, sample_strike_prices_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_volatilities_x, sample_volatilities_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_volatilities_y, sample_volatilities_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_time_to_maturity_x, sample_time_to_maturity_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_time_to_maturity_y, sample_time_to_maturity_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_risk_free_rates_x, sample_risk_free_rates_x, num_options * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_MEMCPY(d_risk_free_rates_y, sample_risk_free_rates_y, num_options * sizeof(float), cudaMemcpyHostToDevice);
 
     // Allocate device memory for output data
     float* d_option_prices, * d_deltas, * d_gammas;
-    cudaMalloc((void**)&d_option_prices, num_options * sizeof(float));
-    cudaMalloc((void**)&d_deltas, num_options * sizeof(float));
-    cudaMalloc((void**)&d_gammas, num_options * sizeof(float));
+    CUDA_MALLOC(d_option_prices, num_options * sizeof(float));
+    CUDA_MALLOC(d_deltas, num_options * sizeof(float));
+    CUDA_MALLOC(d_gammas, num_options * sizeof(float));
 
-    // Launch option pricing kernel
-    black_scholes_option_pricing << <num_blocks, block_size >> > (d_option_prices, d_deltas, d_gammas,
-        d_stock_prices_x, d_stock_prices_y,
-        d_strike_prices_x, d_strike_prices_y,
-        d_volatilities_x, d_volatilities_y,
-        d_time_to_maturity_x, d_time_to_maturity_y,
-        d_risk_free_rates_x, d_risk_free_rates_y,
-        num_options);
+    // Launch option pricing kernel with error checking
+    CUDA_LAUNCH(black_scholes_option_pricing, num_blocks, block_size, 0, 0,
+                d_option_prices, d_deltas, d_gammas,
+                d_stock_prices_x, d_stock_prices_y,
+                d_strike_prices_x, d_strike_prices_y,
+                d_volatilities_x, d_volatilities_y,
+                d_time_to_maturity_x, d_time_to_maturity_y,
+                d_risk_free_rates_x, d_risk_free_rates_y,
+                num_options);
 
-    // Check for kernel launch errors
-    cudaError_t cuda_status = cudaGetLastError();
-    if (cuda_status != cudaSuccess) {
-        fprintf(stderr, "Kernel launch error: %s\n", cudaGetErrorString(cuda_status));
-        return 1;
-    }
-
-    // Wait for kernel to finish
-    cuda_status = cudaDeviceSynchronize();
-    if (cuda_status != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize failed: %s\n", cudaGetErrorString(cuda_status));
-        return 1;
-    }
+    // Synchronize and check for errors
+    CUDA_SYNC();
 
     // Allocate device memory for Monte Carlo output data
     float* d_monte_carlo_results;
-    cudaMalloc((void**)&d_monte_carlo_results, num_options * num_simulations * sizeof(float));
+    CUDA_MALLOC(d_monte_carlo_results, num_options * num_simulations * sizeof(float));
 
-    // Launch Monte Carlo simulation kernel
-    monte_carlo_option_pricing << <num_blocks, block_size >> > (d_monte_carlo_results, d_stock_prices_x,
-        d_volatilities_x, d_time_to_maturity_x,
-        d_risk_free_rates_x, d_strike_prices_x, num_options,
-        num_simulations);
+    // Launch Monte Carlo simulation kernel with error checking
+    CUDA_LAUNCH(monte_carlo_option_pricing, num_blocks, block_size, 0, 0,
+                d_monte_carlo_results, d_stock_prices_x,
+                d_volatilities_x, d_time_to_maturity_x,
+                d_risk_free_rates_x, d_strike_prices_x, num_options,
+                num_simulations);
 
-    // Check for kernel launch errors
-    cuda_status = cudaGetLastError();
-    if (cuda_status != cudaSuccess) {
-        fprintf(stderr, "Kernel launch error: %s\n", cudaGetErrorString(cuda_status));
-        return 1;
-    }
-
-    // Wait for kernel to finish
-    cuda_status = cudaDeviceSynchronize();
-    if (cuda_status != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize failed: %s\n", cudaGetErrorString(cuda_status));
-        return 1;
-    }
+    // Synchronize and check for errors
+    CUDA_SYNC();
 
     // Allocate device memory for VaR calculation
     float* d_var_values;
-    cudaMalloc((void**)&d_var_values, num_blocks * sizeof(float));
+    CUDA_MALLOC(d_var_values, num_blocks * sizeof(float));
 
-    // Launch risk analysis kernel
-    calculate_var << <num_blocks, block_size, block_size * sizeof(float) >> > (d_monte_carlo_results, d_var_values,
-        num_options, confidence_level);
+    // Launch risk analysis kernel with error checking
+    CUDA_LAUNCH(calculate_var, num_blocks, block_size, block_size * sizeof(float), 0,
+                d_monte_carlo_results, d_var_values,
+                num_options, confidence_level);
 
-    // Check for kernel launch errors
-    cuda_status = cudaGetLastError();
-    if (cuda_status != cudaSuccess) {
-        fprintf(stderr, "Kernel launch error: %s\n", cudaGetErrorString(cuda_status));
-        return 1;
-    }
-
-    // Wait for kernel to finish
-    cuda_status = cudaDeviceSynchronize();
-    if (cuda_status != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize failed: %s\n", cudaGetErrorString(cuda_status));
-        return 1;
-    }
+    // Synchronize and check for errors
+    CUDA_SYNC();
 
     // Copy results back to host memory
     float h_option_prices[mem];
@@ -198,11 +180,11 @@ int main() {
         return 1; // Return an error code
     }
 
-    cudaMemcpy(h_option_prices, d_option_prices, num_options * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_deltas, d_deltas, num_options * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_gammas, d_gammas, num_options * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_var_values, d_var_values, num_blocks * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_monte_carlo_results, d_monte_carlo_results, num_options * num_simulations * sizeof(float), cudaMemcpyDeviceToHost);
+    CUDA_MEMCPY(h_option_prices, d_option_prices, num_options * sizeof(float), cudaMemcpyDeviceToHost);
+    CUDA_MEMCPY(h_deltas, d_deltas, num_options * sizeof(float), cudaMemcpyDeviceToHost);
+    CUDA_MEMCPY(h_gammas, d_gammas, num_options * sizeof(float), cudaMemcpyDeviceToHost);
+    CUDA_MEMCPY(h_var_values, d_var_values, num_blocks * sizeof(float), cudaMemcpyDeviceToHost);
+    CUDA_MEMCPY(h_monte_carlo_results, d_monte_carlo_results, num_options * num_simulations * sizeof(float), cudaMemcpyDeviceToHost);
 
     // Calculate mean option price from Monte Carlo simulation results
     float mean_option_price = mean_of_array(h_monte_carlo_results, num_options * num_simulations);
@@ -222,33 +204,28 @@ int main() {
     printf("Confidence Level: %.2f\n", confidence_level);
     printf("Value at Risk (VaR): %.4f\n", h_var_values[0]);
 
-    // Check for kernel launch errors
-    cudaDeviceSynchronize();
-    cudaError_t cuda_status = cudaGetLastError();
-    if (cuda_status != cudaSuccess) {
-        fprintf(stderr, "Kernel launch error: %s\n", cudaGetErrorString(cuda_status));
-        return 1;
-    }
+    // Final error check
+    check_device_status();
 
     // Free dynamically allocated memory
     free(h_monte_carlo_results);
 
-    // Free device memory
-    cudaFree(d_stock_prices_x);
-    cudaFree(d_stock_prices_y);
-    cudaFree(d_strike_prices_x);
-    cudaFree(d_strike_prices_y);
-    cudaFree(d_volatilities_x);
-    cudaFree(d_volatilities_y);
-    cudaFree(d_time_to_maturity_x);
-    cudaFree(d_time_to_maturity_y);
-    cudaFree(d_risk_free_rates_x);
-    cudaFree(d_risk_free_rates_y);
-    cudaFree(d_option_prices);
-    cudaFree(d_deltas);
-    cudaFree(d_gammas);
-    cudaFree(d_monte_carlo_results);
-    cudaFree(d_var_values);
+    // Free device memory with error checking
+    safe_cuda_free(d_stock_prices_x);
+    safe_cuda_free(d_stock_prices_y);
+    safe_cuda_free(d_strike_prices_x);
+    safe_cuda_free(d_strike_prices_y);
+    safe_cuda_free(d_volatilities_x);
+    safe_cuda_free(d_volatilities_y);
+    safe_cuda_free(d_time_to_maturity_x);
+    safe_cuda_free(d_time_to_maturity_y);
+    safe_cuda_free(d_risk_free_rates_x);
+    safe_cuda_free(d_risk_free_rates_y);
+    safe_cuda_free(d_option_prices);
+    safe_cuda_free(d_deltas);
+    safe_cuda_free(d_gammas);
+    safe_cuda_free(d_monte_carlo_results);
+    safe_cuda_free(d_var_values);
 
     return 0;
 }
