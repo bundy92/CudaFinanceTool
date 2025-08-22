@@ -1,3 +1,14 @@
+"""
+Database Models for CUDA Finance Tool
+
+This module defines SQLAlchemy models for storing option pricing results,
+risk calculations, job history, performance metrics, and market data.
+
+Author: CUDA Finance Tool Team
+Version: 1.0.0
+License: MIT
+"""
+
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship

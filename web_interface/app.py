@@ -1,3 +1,14 @@
+"""
+CUDA Finance Tool Web Interface
+
+This Flask application provides a REST API and web interface for the CUDA Finance Tool,
+enabling option pricing, risk analysis, and job management through HTTP endpoints.
+
+Author: CUDA Finance Tool Team
+Version: 1.0.0
+License: MIT
+"""
+
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import numpy as np

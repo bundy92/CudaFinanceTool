@@ -1,3 +1,15 @@
+"""
+Machine Learning Integration Module for CUDA Finance Tool
+
+This module provides machine learning capabilities for volatility forecasting,
+pattern recognition, and trading signal generation. It integrates with the
+CUDA-based financial computing platform to provide AI-powered insights.
+
+Author: CUDA Finance Tool Team
+Version: 1.0.0
+License: MIT
+"""
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor

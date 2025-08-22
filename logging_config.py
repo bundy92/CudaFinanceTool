@@ -1,3 +1,14 @@
+"""
+Logging Configuration for CUDA Finance Tool
+
+This module provides comprehensive logging capabilities including structured logging,
+performance monitoring, error tracking, and alert management for the CUDA Finance Tool.
+
+Author: CUDA Finance Tool Team
+Version: 1.0.0
+License: MIT
+"""
+
 import logging
 import logging.handlers
 import os

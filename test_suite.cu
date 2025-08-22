@@ -4,17 +4,17 @@
 #include <assert.h>
 #include <cuda_runtime.h>
 #include <curand_kernel.h>
+#include "config.h"
 #include "option_pricing.cuh"
 #include "monte_carlo.cuh"
 #include "risk_analysis.cuh"
+#include "advanced_options.cuh"
+#include "enhanced_risk.cuh"
 #include "utils.cuh"
 #include "error_handling.cuh"
 
-// Test configuration
-#define TEST_NUM_OPTIONS 1024
-#define TEST_NUM_SIMULATIONS 10000
-#define TEST_BLOCK_SIZE 256
-#define TEST_TOLERANCE 1e-4f
+// Test configuration (using config.h constants)
+// Note: These are already defined in config.h, so we use them directly
 
 // Test results structure
 typedef struct {

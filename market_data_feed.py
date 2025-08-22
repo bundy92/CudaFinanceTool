@@ -1,3 +1,15 @@
+"""
+Real-time Market Data Feed Module for CUDA Finance Tool
+
+This module provides real-time market data collection from multiple sources,
+including Yahoo Finance, Alpha Vantage, and Polygon.io. It includes caching,
+data aggregation, and WebSocket support for live data feeds.
+
+Author: CUDA Finance Tool Team
+Version: 1.0.0
+License: MIT
+"""
+
 import asyncio
 import aiohttp
 import websockets

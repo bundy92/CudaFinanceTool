@@ -1,3 +1,14 @@
+"""
+Database Manager for CUDA Finance Tool
+
+This module provides database management capabilities including CRUD operations
+for option pricing results, risk calculations, job history, and performance metrics.
+
+Author: CUDA Finance Tool Team
+Version: 1.0.0
+License: MIT
+"""
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError

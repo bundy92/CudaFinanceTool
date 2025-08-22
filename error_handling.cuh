@@ -5,6 +5,7 @@
 #include <curand_kernel.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "config.h"
 
 // Error handling macros
 #define CUDA_CHECK(call) \
@@ -119,16 +120,16 @@
 
 #define VALIDATE_RISK_FREE_RATE(rate) \
     do { \
-        if (rate < -0.1f || rate > 1.0f) { \
-            fprintf(stderr, "Invalid risk-free rate at %s:%d: %f\n", __FILE__, __LINE__, rate); \
+        if (rate < MIN_RISK_FREE_RATE || rate > MAX_RISK_FREE_RATE) { \
+            fprintf(stderr, "Invalid risk-free rate at %s:%d: %f (valid range: %f-%f)\n", __FILE__, __LINE__, rate, MIN_RISK_FREE_RATE, MAX_RISK_FREE_RATE); \
             exit(EXIT_FAILURE); \
         } \
     } while(0)
 
 #define VALIDATE_CONFIDENCE_LEVEL(level) \
     do { \
-        if (level <= 0.0f || level >= 1.0f) { \
-            fprintf(stderr, "Invalid confidence level at %s:%d: %f\n", __FILE__, __LINE__, level); \
+        if (level <= MIN_CONFIDENCE_LEVEL || level >= MAX_CONFIDENCE_LEVEL) { \
+            fprintf(stderr, "Invalid confidence level at %s:%d: %f (valid range: %f-%f)\n", __FILE__, __LINE__, level, MIN_CONFIDENCE_LEVEL, MAX_CONFIDENCE_LEVEL); \
             exit(EXIT_FAILURE); \
         } \
     } while(0)

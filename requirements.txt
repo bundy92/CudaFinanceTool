@@ -30,7 +30,6 @@ sphinx>=5.0.0
 sphinx-rtd-theme>=1.0.0
 
 # Optional: Advanced features
-scikit-learn>=1.1.0
 tensorflow>=2.10.0
 torch>=1.12.0
 
@@ -44,7 +43,7 @@ structlog>=22.0.0
 prometheus-client>=0.14.0
 
 # Machine Learning
-scikit-learn>=1.1.0
+scikit-learn>=1.2.0
 joblib>=1.2.0
 
 # Real-time data and async
@@ -52,11 +51,4 @@ aiohttp>=3.8.0
 websockets>=10.0
 redis>=4.0.0
 alpha-vantage>=2.3.0
-
-# Optional: Real-time data
-websocket-client>=1.4.0
-redis>=4.0.0
-
-# Optional: Monitoring and logging
-prometheus-client>=0.14.0
-structlog>=22.0.0 
+websocket-client>=1.4.0 

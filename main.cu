@@ -1,9 +1,12 @@
 // Include necessary libraries
 #include <stdio.h>               // Standard input/output library
 #include <stdlib.h>              // Standard library
+#include "config.h"              // Configuration constants
 #include "option_pricing.cuh"    // CUDA kernel for option pricing
 #include "monte_carlo.cuh"       // CUDA kernel for Monte Carlo simulation
 #include "risk_analysis.cuh"     // CUDA kernel for risk analysis
+#include "advanced_options.cuh"  // Advanced option types
+#include "enhanced_risk.cuh"     // Enhanced risk models
 #include "utils.cuh"             // Utility functions
 #include "error_handling.cuh"    // Error handling system
 
@@ -53,12 +56,12 @@ int main() {
     CUDA_CHECK(cudaSetDevice(0));
     print_device_info();
     
-    // Constants
-    const int num_options = 8196;           // Number of options
-    const int mem = 8196;                      // Memory allocation size
-    const float confidence_level = 0.95;      // Confidence level for risk analysis
-    const int num_simulations = 100000;         // Number of Monte Carlo simulations
-    const int block_size = 512;                // CUDA block size
+    // Constants from config
+    const int num_options = DEFAULT_NUM_OPTIONS;           // Number of options
+    const int mem = DEFAULT_NUM_OPTIONS;                   // Memory allocation size
+    const float confidence_level = DEFAULT_CONFIDENCE_LEVEL; // Confidence level for risk analysis
+    const int num_simulations = DEFAULT_NUM_SIMULATIONS;   // Number of Monte Carlo simulations
+    const int block_size = DEFAULT_BLOCK_SIZE;             // CUDA block size
     const int num_blocks = (num_options + block_size - 1) / block_size; // Number of CUDA blocks
     
     // Validate parameters
